@@ -126,3 +126,5 @@ dmypy.json
 
 # Training data
 training_dataset.csv
+vecs.tsv
+meta.tsv
