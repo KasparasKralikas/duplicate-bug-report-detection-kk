@@ -7,14 +7,14 @@ class BugModel:
     history = None
     modelPath = 'models/bug_model'
 
-    def constructModel(self, vocab_size, embedding_dim, max_length):
+    def constructModel(self, vocab_size, embedding_dim, max_length, label_count):
         self.model = tf.keras.Sequential([
             tf.keras.layers.Embedding(vocab_size, embedding_dim, input_length=max_length),
-            tf.keras.layers.GlobalAveragePooling1D(),
-            tf.keras.layers.Dense(24, activation='relu'),
-            tf.keras.layers.Dense(1, activation='sigmoid')
+            tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(embedding_dim)),
+            tf.keras.layers.Dense(embedding_dim, activation='relu'),
+            tf.keras.layers.Dense(label_count, activation='softmax')
         ])
-        self.model.compile(loss='binary_crossentropy',optimizer='adam',metrics=['accuracy'])
+        self.model.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
         print(self.model.summary())
 
     def fit_model(self, training_data, training_labels, testing_data, testing_labels, num_epochs):

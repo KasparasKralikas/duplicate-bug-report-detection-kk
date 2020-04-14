@@ -21,16 +21,21 @@ data_full = data_full[:20000]
 
 data_full['cleaned_description'] = data_full['description'].apply(lambda x: clean_text(x))
 
+data_full['master_id_string'] = data_full['master_id'].apply(lambda x: str(x))
+
 training_size = int(len(data_full.index) * training_portion)
 
 training_descriptions = data_full['cleaned_description'][0:training_size]
-training_labels = data_full['is_bug'][0:training_size]
+training_labels = data_full['master_id_string'][0:training_size]
 testing_descriptions = data_full['cleaned_description'][training_size:]
-testing_labels = data_full['is_bug'][training_size:]
+testing_labels = data_full['master_id_string'][training_size:]
 
 tokenizer = Tokenizer(num_words = vocab_size, oov_token=oov_token)
 tokenizer.fit_on_texts(training_descriptions)
 word_index = tokenizer.word_index
+
+label_tokenizer = Tokenizer()
+label_tokenizer.fit_on_texts(training_labels)
 
 reverse_word_index = dict([(value, key) for (key, value) in word_index.items()])
 
@@ -38,19 +43,28 @@ def decode_sentence(text):
     return ' '.join([reverse_word_index.get(i, '?') for i in text])
 
 training_padded = text_to_padded(training_descriptions, tokenizer, max_length)
+training_labels = label_tokenizer.texts_to_sequences(training_labels)
 testing_padded = text_to_padded(testing_descriptions, tokenizer, max_length)
+testing_labels = label_tokenizer.texts_to_sequences(testing_labels)
 
 training_padded = np.array(training_padded)
 training_labels = np.array(training_labels)
 testing_padded = np.array(testing_padded)
 testing_labels = np.array(testing_labels)
 
+label_count = len(training_labels) + 1
+
 bug_model = BugModel()
 
-bug_model.constructModel(vocab_size, embedding_dim, max_length)
+bug_model.constructModel(vocab_size, embedding_dim, max_length, label_count)
 
 bug_model.fit_model(training_padded, training_labels, training_padded, training_labels, num_epochs)
 
 bug_model.plot_graphs()
 
 bug_model.save_model()
+'''
+bug_model.load_model()
+
+print(bug_model.predict(testing_padded))
+'''
