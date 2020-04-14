@@ -128,3 +128,4 @@ dmypy.json
 training_dataset.csv
 vecs.tsv
 meta.tsv
+models
