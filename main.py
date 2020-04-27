@@ -9,7 +9,7 @@ from bug_model import BugModel
 
 oov_token = '<OOV>'
 vocab_size = 10000
-embedding_dim = 16
+embedding_dim = 30
 training_portion = 0.8
 max_length = 800
 num_epochs = 30
@@ -17,7 +17,7 @@ num_epochs = 30
 data_full = pd.read_csv('datasets/training_dataset.csv', sep=',')
 
 # smaller dataset for testing
-data_full = data_full[:20000]
+data_full = data_full[:14000]
 
 data_full['cleaned_description'] = data_full['description'].apply(lambda x: clean_text(x))
 
@@ -34,13 +34,18 @@ tokenizer = Tokenizer(num_words = vocab_size, oov_token=oov_token)
 tokenizer.fit_on_texts(training_descriptions)
 word_index = tokenizer.word_index
 
-label_tokenizer = Tokenizer()
+label_tokenizer = Tokenizer(oov_token=oov_token)
 label_tokenizer.fit_on_texts(training_labels)
+label_index = label_tokenizer.word_index
 
 reverse_word_index = dict([(value, key) for (key, value) in word_index.items()])
 
 def decode_sentence(text):
     return ' '.join([reverse_word_index.get(i, '?') for i in text])
+
+def decode_label(label_index, index):
+    reverse_label_index = dict([(value, key) for (key, value) in label_index.items()])
+    return reverse_label_index.get(index, '?')
 
 training_padded = text_to_padded(training_descriptions, tokenizer, max_length)
 training_labels = label_tokenizer.texts_to_sequences(training_labels)
@@ -51,8 +56,13 @@ training_padded = np.array(training_padded)
 training_labels = np.array(training_labels)
 testing_padded = np.array(testing_padded)
 testing_labels = np.array(testing_labels)
+print(training_labels)
 
-label_count = len(training_labels) + 1
+training_labels = tf.keras.utils.to_categorical(training_labels)
+testing_labels = tf.keras.utils.to_categorical(testing_labels)
+print(training_labels)
+
+label_count = len(label_index) + 1
 
 bug_model = BugModel()
 
@@ -66,5 +76,5 @@ bug_model.save_model()
 '''
 bug_model.load_model()
 
-print(bug_model.predict(testing_padded))
+predictions = bug_model.predict(testing_padded)
 '''

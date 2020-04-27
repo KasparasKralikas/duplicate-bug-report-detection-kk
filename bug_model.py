@@ -12,9 +12,10 @@ class BugModel:
             tf.keras.layers.Embedding(vocab_size, embedding_dim, input_length=max_length),
             tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(embedding_dim)),
             tf.keras.layers.Dense(embedding_dim, activation='relu'),
-            tf.keras.layers.Dense(label_count, activation='softmax')
+            tf.keras.layers.Dense(label_count, activation='sigmoid')
         ])
-        self.model.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
+        metrics = ['accuracy', tf.keras.metrics.Precision(top_k=10, name='top_10_precission'), tf.keras.metrics.Recall(top_k=10, name='top_10_recall'), tf.keras.metrics.TopKCategoricalAccuracy(k=10, name='top_10_categorical_accuracy')]
+        self.model.compile(loss='categorical_crossentropy',optimizer='adam',metrics=metrics)
         print(self.model.summary())
 
     def fit_model(self, training_data, training_labels, testing_data, testing_labels, num_epochs):
@@ -39,6 +40,9 @@ class BugModel:
         plt.show()
 
     def plot_graphs(self):
-        self.plot_graph("accuracy")
-        self.plot_graph("loss")
+        self.plot_graph('accuracy')
+        self.plot_graph('top_10_precission')
+        self.plot_graph('top_10_recall')
+        self.plot_graph('top_10_categorical_accuracy')
+        self.plot_graph('loss')
     
