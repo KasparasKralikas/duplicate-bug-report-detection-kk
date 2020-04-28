@@ -7,74 +7,11 @@ import matplotlib.pyplot as plt
 import io
 from bug_model import BugModel
 
-oov_token = '<OOV>'
-vocab_size = 10000
-embedding_dim = 30
-training_portion = 0.8
-max_length = 800
-num_epochs = 30
+from bug_model_client import BugModelClient
 
-data_full = pd.read_csv('datasets/training_dataset.csv', sep=',')
-
-# smaller dataset for testing
-data_full = data_full[:14000]
-
-data_full['cleaned_description'] = data_full['description'].apply(lambda x: clean_text(x))
-
-data_full['master_id_string'] = data_full['master_id'].apply(lambda x: str(x))
-
-training_size = int(len(data_full.index) * training_portion)
-
-training_descriptions = data_full['cleaned_description'][0:training_size]
-training_labels = data_full['master_id_string'][0:training_size]
-testing_descriptions = data_full['cleaned_description'][training_size:]
-testing_labels = data_full['master_id_string'][training_size:]
-
-tokenizer = Tokenizer(num_words = vocab_size, oov_token=oov_token)
-tokenizer.fit_on_texts(training_descriptions)
-word_index = tokenizer.word_index
-
-label_tokenizer = Tokenizer(oov_token=oov_token)
-label_tokenizer.fit_on_texts(training_labels)
-label_index = label_tokenizer.word_index
-
-reverse_word_index = dict([(value, key) for (key, value) in word_index.items()])
-
-def decode_sentence(text):
-    return ' '.join([reverse_word_index.get(i, '?') for i in text])
-
-def decode_label(label_index, index):
-    reverse_label_index = dict([(value, key) for (key, value) in label_index.items()])
-    return reverse_label_index.get(index, '?')
-
-training_padded = text_to_padded(training_descriptions, tokenizer, max_length)
-training_labels = label_tokenizer.texts_to_sequences(training_labels)
-testing_padded = text_to_padded(testing_descriptions, tokenizer, max_length)
-testing_labels = label_tokenizer.texts_to_sequences(testing_labels)
-
-training_padded = np.array(training_padded)
-training_labels = np.array(training_labels)
-testing_padded = np.array(testing_padded)
-testing_labels = np.array(testing_labels)
-print(training_labels)
-
-training_labels = tf.keras.utils.to_categorical(training_labels)
-testing_labels = tf.keras.utils.to_categorical(testing_labels)
-print(training_labels)
-
-label_count = len(label_index) + 1
-
-bug_model = BugModel()
-
-bug_model.constructModel(vocab_size, embedding_dim, max_length, label_count)
-
-bug_model.fit_model(training_padded, training_labels, training_padded, training_labels, num_epochs)
-
-bug_model.plot_graphs()
-
-bug_model.save_model()
-'''
-bug_model.load_model()
-
-predictions = bug_model.predict(testing_padded)
-'''
+bug_model_client = BugModelClient()
+bug_model_client.init_data(14000)
+#bug_model_client.train_model()
+bug_model_client.load_model()
+print(bug_model_client.data['description'][:10])
+print(bug_model_client.predict(bug_model_client.data['description'][:10], 10))
