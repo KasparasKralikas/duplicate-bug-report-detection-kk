@@ -11,7 +11,7 @@ class BugModelClient:
 
     oov_token = '<OOV>'
     vocab_size = 10000
-    embedding_dim = 30
+    embedding_dim = 10
     training_portion = 0.8
     max_length = 800
     num_epochs = 30

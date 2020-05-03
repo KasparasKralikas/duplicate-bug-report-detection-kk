@@ -11,7 +11,7 @@ from bug_model_client import BugModelClient
 
 bug_model_client = BugModelClient()
 bug_model_client.init_data(14000)
-#bug_model_client.train_model()
+bug_model_client.train_model()
 bug_model_client.load_model()
 print(bug_model_client.data['description'][:10])
 print(bug_model_client.predict(bug_model_client.data['description'][:10], 10))

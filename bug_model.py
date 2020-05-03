@@ -12,9 +12,9 @@ class BugModel:
             tf.keras.layers.Embedding(vocab_size, embedding_dim, input_length=max_length),
             tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(embedding_dim)),
             tf.keras.layers.Dense(embedding_dim, activation='relu'),
-            tf.keras.layers.Dense(label_count, activation='sigmoid')
+            tf.keras.layers.Dense(label_count, activation='softmax')
         ])
-        metrics = ['accuracy', tf.keras.metrics.Precision(top_k=10, name='top_10_precission'), tf.keras.metrics.Recall(top_k=10, name='top_10_recall'), tf.keras.metrics.TopKCategoricalAccuracy(k=10, name='top_10_categorical_accuracy')]
+        metrics = ['accuracy', tf.keras.metrics.Precision(top_k=10, name='top_10_precission'), tf.keras.metrics.Recall(top_k=10, name='top_10_recall'), tf.keras.metrics.TopKCategoricalAccuracy(k=10, name='top_10_categorical_accuracy'), tf.keras.metrics.Precision(top_k=20, name='top_20_precission'), tf.keras.metrics.Recall(top_k=20, name='top_20_recall'), tf.keras.metrics.TopKCategoricalAccuracy(k=20, name='top_20_categorical_accuracy'), tf.keras.metrics.PrecisionAtRecall(recall=0.7, name='precission_at_recall')]
         self.model.compile(loss='categorical_crossentropy',optimizer='adam',metrics=metrics)
         print(self.model.summary())
 
@@ -44,5 +44,9 @@ class BugModel:
         self.plot_graph('top_10_precission')
         self.plot_graph('top_10_recall')
         self.plot_graph('top_10_categorical_accuracy')
+        self.plot_graph('top_20_precission')
+        self.plot_graph('top_20_recall')
+        self.plot_graph('top_20_categorical_accuracy')
+        self.plot_graph('precission_at_recall')
         self.plot_graph('loss')
     
