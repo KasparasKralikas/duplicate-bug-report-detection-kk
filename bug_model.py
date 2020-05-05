@@ -14,12 +14,12 @@ class BugModel:
             tf.keras.layers.Dense(embedding_dim, activation='relu'),
             tf.keras.layers.Dense(label_count, activation='softmax')
         ])
-        metrics = ['accuracy', tf.keras.metrics.Precision(top_k=10, name='top_10_precission'), tf.keras.metrics.Recall(top_k=10, name='top_10_recall'), tf.keras.metrics.TopKCategoricalAccuracy(k=10, name='top_10_categorical_accuracy'), tf.keras.metrics.Precision(top_k=20, name='top_20_precission'), tf.keras.metrics.Recall(top_k=20, name='top_20_recall'), tf.keras.metrics.TopKCategoricalAccuracy(k=20, name='top_20_categorical_accuracy'), tf.keras.metrics.PrecisionAtRecall(recall=0.7, name='precission_at_recall')]
+        metrics = ['accuracy', tf.keras.metrics.Precision(top_k=10, name='top_10_precission'), tf.keras.metrics.Recall(top_k=10, name='top_10_recall'), tf.keras.metrics.TopKCategoricalAccuracy(k=10, name='top_10_categorical_accuracy'), tf.keras.metrics.Precision(top_k=20, name='top_20_precission'), tf.keras.metrics.Recall(top_k=20, name='top_20_recall'), tf.keras.metrics.TopKCategoricalAccuracy(k=20, name='top_20_categorical_accuracy')]
         self.model.compile(loss='categorical_crossentropy',optimizer='adam',metrics=metrics)
         print(self.model.summary())
 
     def fit_model(self, training_data, training_labels, testing_data, testing_labels, num_epochs):
-        self.history = self.model.fit(training_data, training_labels, epochs=num_epochs, validation_data=(testing_data, testing_labels), verbose=2)
+        self.history = self.model.fit(training_data, training_labels, epochs=num_epochs, shuffle=True, validation_data=(testing_data, testing_labels), verbose=2)
 
     def predict(self, data):
         return self.model.predict(data)
@@ -47,6 +47,5 @@ class BugModel:
         self.plot_graph('top_20_precission')
         self.plot_graph('top_20_recall')
         self.plot_graph('top_20_categorical_accuracy')
-        self.plot_graph('precission_at_recall')
         self.plot_graph('loss')
     

@@ -10,11 +10,11 @@ from bug_model import BugModel
 class BugModelClient:
 
     oov_token = '<OOV>'
-    vocab_size = 10000
-    embedding_dim = 10
+    vocab_size = 30000
+    embedding_dim = 32
     training_portion = 0.8
     max_length = 800
-    num_epochs = 30
+    num_epochs = 50
 
     data_path = 'datasets/training_dataset.csv'
 
@@ -52,6 +52,7 @@ class BugModelClient:
         self.tokenizer = Tokenizer(num_words = self.vocab_size, oov_token=self.oov_token)
         self.tokenizer.fit_on_texts(training_descriptions)
         self.word_index = self.tokenizer.word_index
+        print(len(self.word_index))
 
         self.label_tokenizer = Tokenizer(oov_token=self.oov_token)
         self.label_tokenizer.fit_on_texts(training_labels)
