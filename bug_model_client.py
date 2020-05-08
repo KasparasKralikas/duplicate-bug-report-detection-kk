@@ -79,6 +79,23 @@ class BugModelClient:
         descriptions2 = np.array(text_to_padded(self.clean_descriptions(descriptions2), self.tokenizer, self.max_length))
         return self.bug_model.predict([descriptions1, descriptions2])
 
+    def predict_top_k(self, descriptions, all_descriptions, labels, k):
+        descriptions = np.array(text_to_padded(self.clean_descriptions(descriptions), self.tokenizer, self.max_length))
+        all_descriptions = np.array(text_to_padded(self.clean_descriptions(all_descriptions), self.tokenizer, self.max_length))
+        all_predictions = []
+        for description in descriptions:
+            description_repeated = np.full((len(all_descriptions), self.max_length), description)
+            predictions = self.bug_model.predict([description_repeated, all_descriptions])
+            predictions = np.array([prediction[0] for prediction in predictions])
+            predictions_top_k_indices = (-predictions).argsort()[:k]
+            prediction_summary = []
+            for index in predictions_top_k_indices:
+                prediction_summary.append({'case_id': labels[index], 'probability': predictions[index]})
+            all_predictions.append(prediction_summary)
+        return all_predictions
+
+
+
         
 
 

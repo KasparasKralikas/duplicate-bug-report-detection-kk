@@ -130,3 +130,4 @@ vecs.tsv
 meta.tsv
 models
 datasets/training_dataset_pairs.csv
+datasets/bugs_dataset.csv

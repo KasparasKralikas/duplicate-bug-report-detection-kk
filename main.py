@@ -15,16 +15,30 @@ from sklearn.model_selection import train_test_split
 
 from bug_model_client import BugModelClient
 
+import time
+
 
 bug_model_client = BugModelClient()
-bug_model_client.init_data(300000)
-bug_model_client.train_model()
-bug_model_client.plot_graphs()
-bug_model_client.save_model()
+bug_model_client.init_data(44000)
+#bug_model_client.train_model()
+#bug_model_client.plot_graphs()
+#bug_model_client.save_model()
 bug_model_client.load_model()
-data = pd.read_csv('datasets/training_dataset_pairs.csv', sep=',')[-10:]
-print(data)
-print(bug_model_client.predict(data['description_1'], data['description_2']))
+#data = pd.read_csv('datasets/training_dataset_pairs.csv', sep=',')[-10:]
+#print(data.head())
+#print(bug_model_client.predict(data['description_1'], data['description_2']))
+
+data = pd.read_csv('datasets/bugs_dataset.csv', sep=',')[:10000]
+
+all_bugs = data[:len(data)-10]
+new_bugs = data[-10:]
+print(new_bugs)
+
+
+start = time.time()
+print(bug_model_client.predict_top_k(new_bugs['description'], all_bugs['description'], all_bugs['case_id'], 5))
+end = time.time()
+print(end - start)
 
 '''
 
