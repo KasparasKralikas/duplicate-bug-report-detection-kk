@@ -20,9 +20,9 @@ import time
 
 bug_model_client = BugModelClient()
 bug_model_client.init_data(44000)
-#bug_model_client.train_model()
-#bug_model_client.plot_graphs()
-#bug_model_client.save_model()
+bug_model_client.train_model()
+bug_model_client.plot_graphs()
+bug_model_client.save_model()
 bug_model_client.load_model()
 #data = pd.read_csv('datasets/training_dataset_pairs.csv', sep=',')[-10:]
 #print(data.head())

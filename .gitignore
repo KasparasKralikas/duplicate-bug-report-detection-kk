@@ -131,3 +131,5 @@ meta.tsv
 models
 datasets/training_dataset_pairs.csv
 datasets/bugs_dataset.csv
+datasets/training_dataset_embeddings.csv
+datasets/custom_glove_100d.txt
