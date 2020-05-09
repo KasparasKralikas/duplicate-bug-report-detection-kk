@@ -11,14 +11,16 @@ from bug_model import BugModel
 class BugModelClient:
 
     oov_token = '<OOV>'
-    vocab_size = 60000
-    embedding_dim = 32
+    vocab_size = None
+    embedding_dim = 50
     training_portion = 0.8
     max_length = 800
     num_epochs = 3
     dropout = 0.1
 
     data_path = 'datasets/training_dataset_pairs.csv'
+
+    custom_glove_path = 'datasets/custom_glove_50d.txt'
 
     data = None
 
@@ -27,6 +29,8 @@ class BugModelClient:
     word_index = None
 
     tokenizer = None
+
+    embedding_matrix = None
 
     bug_model = BugModel()
 
@@ -44,6 +48,7 @@ class BugModelClient:
         self.tokenizer.fit_on_texts(X2_train)
         self.word_index = self.tokenizer.word_index
         print(len(self.word_index))
+        self.vocab_size = len(self.word_index) + 1
 
         X1_train = np.array(text_to_padded(X1_train, self.tokenizer, self.max_length))
         X1_test = np.array(text_to_padded(X1_test, self.tokenizer, self.max_length))
@@ -57,12 +62,29 @@ class BugModelClient:
         self.y_train = y_train
         self.y_test = y_test
 
+    def prepare_embedding(self):
+        embeddings_index = dict()
+        f = open(self.custom_glove_path, encoding='utf8')
+        for line in f:
+            values = line.split()
+            word = values[0]
+            coefs = np.asarray(values[1:], dtype='float32')
+            embeddings_index[word] = coefs
+        f.close()
+        print('Loaded %s word vectors.' % len(embeddings_index))
+        embeddings_matrix = np.zeros((self.vocab_size, self.embedding_dim))
+        for word, i in self.tokenizer.word_index.items():
+            embedding_vector = embeddings_index.get(word)
+            if embedding_vector is not None:
+                embeddings_matrix[i] = embedding_vector
+        self.embedding_matrix = embeddings_matrix
+
     def clean_descriptions(self, descriptions):
         clean_descriptions = descriptions.apply(lambda x: clean_text(x))
         return clean_descriptions
 
     def train_model(self):
-        self.bug_model.construct_model(self.vocab_size, self.embedding_dim, self.max_length, self.dropout)
+        self.bug_model.construct_model(self.vocab_size, self.embedding_dim, self.max_length, self.dropout, self.embedding_matrix)
         self.bug_model.fit_model([self.X1_train, self.X2_train], self.y_train, [self.X1_test, self.X2_test], self.y_test, self.num_epochs)
 
     def plot_graphs(self):

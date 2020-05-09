@@ -7,12 +7,13 @@ class BugModel:
     history = None
     modelPath = 'models/bug_model'
 
-    def construct_model(self, vocab_size, embedding_dim, max_length, dropout):
+    def construct_model(self, vocab_size, embedding_dim, max_length, dropout, embedding_matrix):
 
         input1 = tf.keras.Input(shape=(max_length,))
         input2 = tf.keras.Input(shape=(max_length,))
 
-        embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim, input_length=max_length)
+        embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim, input_length=max_length, embeddings_initializer=tf.keras.initializers.Constant(embedding_matrix))
+        embedding.trainable = False
 
         embedding1 = embedding(input1)
         embedding2 = embedding(input2)
