@@ -19,25 +19,22 @@ import time
 
 
 bug_model_client = BugModelClient()
-bug_model_client.init_data(44000)
+bug_model_client.init_data(19000)
 bug_model_client.prepare_embedding()
 bug_model_client.train_model()
 bug_model_client.plot_graphs()
 bug_model_client.save_model()
 bug_model_client.load_model()
-#data = pd.read_csv('datasets/training_dataset_pairs.csv', sep=',')[-10:]
-#print(data.head())
-#print(bug_model_client.predict(data['description_1'], data['description_2']))
 
-data = pd.read_csv('datasets/bugs_dataset.csv', sep=',')[:10000]
+data = pd.read_csv('datasets/bugs_dataset.csv', sep=',')
 
-all_bugs = data[:len(data)-10]
-new_bugs = data[-10:]
+all_bugs = data[:len(data)-3]
+new_bugs = data[-3:]
 print(new_bugs)
 
 
 start = time.time()
-print(bug_model_client.predict_top_k(new_bugs['description'], all_bugs['description'], all_bugs['case_id'], 5))
+print(bug_model_client.predict_top_k(new_bugs['description'], all_bugs['description'], all_bugs['case_id'], all_bugs['master_id_label'], 20))
 end = time.time()
 print(end - start)
 

@@ -20,13 +20,16 @@ class BugModel:
 
         merged = tf.keras.layers.concatenate([embedding1, embedding2])
         merged = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(embedding_dim))(merged)
-        merged = tf.keras.layers.Dense(embedding_dim, activation='relu')(merged)
+        merged = tf.keras.layers.Dense(embedding_dim * 2, activation='relu')(merged)
+        merged = tf.keras.layers.Dropout(rate=dropout)(merged)
+        merged = tf.keras.layers.Dense(embedding_dim * 2, activation='relu')(merged)
+        merged = tf.keras.layers.Dropout(rate=dropout)(merged)
         
         pred = tf.keras.layers.Dense(1, activation='sigmoid')(merged)
 
         self.model = tf.keras.Model(inputs=[input1, input2], outputs=pred)
 
-        metrics = ['accuracy', tf.keras.metrics.Recall(name='recall'), tf.keras.metrics.Precision(name='precission')]
+        metrics = ['accuracy', tf.keras.metrics.Recall(name='recall'), tf.keras.metrics.Precision(name='precission'), tf.keras.metrics.AUC(name='AUC')]
         self.model.compile(loss='binary_crossentropy',optimizer='adam',metrics=metrics)
         print(self.model.summary())
 
@@ -53,5 +56,8 @@ class BugModel:
 
     def plot_graphs(self):
         self.plot_graph('accuracy')
+        self.plot_graph('recall')
+        self.plot_graph('precission')
+        self.plot_graph('AUC')
         self.plot_graph('loss')
     

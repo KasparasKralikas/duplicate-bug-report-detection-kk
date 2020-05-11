@@ -5,6 +5,7 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import io
+import pickle
 from sklearn.model_selection import train_test_split
 from bug_model import BugModel
 
@@ -15,10 +16,12 @@ class BugModelClient:
     embedding_dim = 50
     training_portion = 0.8
     max_length = 800
-    num_epochs = 3
+    num_epochs = 8
     dropout = 0.1
 
     data_path = 'datasets/training_dataset_pairs.csv'
+
+    tokenizer_path = 'models/tokenizer.pickle'
 
     custom_glove_path = 'datasets/custom_glove_50d.txt'
 
@@ -43,7 +46,7 @@ class BugModelClient:
 
         X1_train, X1_test, X2_train, X2_test, y_train, y_test = train_test_split(self.data['clean_description_1'], self.data['clean_description_2'], self.data['duplicates'], test_size=0.2)
 
-        self.tokenizer = Tokenizer(num_words = self.vocab_size, oov_token=self.oov_token)
+        self.tokenizer = Tokenizer(oov_token=self.oov_token)
         self.tokenizer.fit_on_texts(X1_train)
         self.tokenizer.fit_on_texts(X2_train)
         self.word_index = self.tokenizer.word_index
@@ -79,6 +82,17 @@ class BugModelClient:
                 embeddings_matrix[i] = embedding_vector
         self.embedding_matrix = embeddings_matrix
 
+    def save_tokenizer(self):
+        with open(self.tokenizer_path, 'wb') as handle:
+            pickle.dump(self.tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load_tokenizer(self):
+        with open(self.tokenizer_path, 'rb') as handle:
+            self.tokenizer = pickle.load(handle)
+        self.word_index = self.tokenizer.word_index
+        self.vocab_size = len(self.word_index) + 1
+        print('Loaded tokenizer with %s words.' % self.vocab_size)
+
     def clean_descriptions(self, descriptions):
         clean_descriptions = descriptions.apply(lambda x: clean_text(x))
         return clean_descriptions
@@ -92,16 +106,18 @@ class BugModelClient:
 
     def save_model(self):
         self.bug_model.save_model()
+        self.save_tokenizer()
 
     def load_model(self):
         self.bug_model.load_model()
+        self.load_tokenizer()
 
     def predict(self, descriptions1, descriptions2):
         descriptions1 = np.array(text_to_padded(self.clean_descriptions(descriptions1), self.tokenizer, self.max_length))
         descriptions2 = np.array(text_to_padded(self.clean_descriptions(descriptions2), self.tokenizer, self.max_length))
         return self.bug_model.predict([descriptions1, descriptions2])
 
-    def predict_top_k(self, descriptions, all_descriptions, labels, k):
+    def predict_top_k(self, descriptions, all_descriptions, labels, master_labels, k):
         descriptions = np.array(text_to_padded(self.clean_descriptions(descriptions), self.tokenizer, self.max_length))
         all_descriptions = np.array(text_to_padded(self.clean_descriptions(all_descriptions), self.tokenizer, self.max_length))
         all_predictions = []
@@ -109,10 +125,15 @@ class BugModelClient:
             description_repeated = np.full((len(all_descriptions), self.max_length), description)
             predictions = self.bug_model.predict([description_repeated, all_descriptions])
             predictions = np.array([prediction[0] for prediction in predictions])
-            predictions_top_k_indices = (-predictions).argsort()[:k]
+            predictions_top_indices = (-predictions).argsort()
             prediction_summary = []
-            for index in predictions_top_k_indices:
-                prediction_summary.append({'case_id': labels[index], 'probability': predictions[index]})
+            top_k_master_labels = []
+            for index in predictions_top_indices:
+                if len(top_k_master_labels) >= k:
+                    break
+                if master_labels[index] not in top_k_master_labels:
+                    top_k_master_labels.append(master_labels[index])
+                    prediction_summary.append({'case_id': labels[index], 'master_id': master_labels[index], 'probability': predictions[index]})
             all_predictions.append(prediction_summary)
         return all_predictions
 
