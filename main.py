@@ -19,7 +19,7 @@ import time
 
 
 bug_model_client = BugModelClient()
-bug_model_client.init_data(19000)
+bug_model_client.init_data(29000)
 bug_model_client.prepare_embedding()
 bug_model_client.train_model()
 bug_model_client.plot_graphs()
@@ -28,8 +28,8 @@ bug_model_client.load_model()
 
 data = pd.read_csv('datasets/bugs_dataset.csv', sep=',')
 
-all_bugs = data[:len(data)-3]
-new_bugs = data[-3:]
+all_bugs = data[:len(data)-5]
+new_bugs = data[-5:]
 print(new_bugs)
 
 
