@@ -19,7 +19,7 @@ import time
 
 
 bug_model_client = BugModelClient()
-bug_model_client.init_data(44000)
+bug_model_client.init_data(19000)
 bug_model_client.prepare_embedding()
 bug_model_client.train_model()
 bug_model_client.plot_graphs()

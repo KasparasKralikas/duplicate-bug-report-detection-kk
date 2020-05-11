@@ -18,16 +18,35 @@ class BugModel:
         embedding1 = embedding(input1)
         embedding2 = embedding(input2)
 
-        merged = tf.keras.layers.concatenate([embedding1, embedding2])
-        merged = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(embedding_dim))(merged)
-        merged = tf.keras.layers.Dense(embedding_dim, activation='relu')(merged)
-        
-        pred = tf.keras.layers.Dense(1, activation='sigmoid')(merged)
+        bi_lstm = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(embedding_dim))
+
+        vector1 = bi_lstm(embedding1)
+        vector1 = tf.keras.layers.Flatten()(vector1)
+        vector2 = bi_lstm(embedding2)
+        vector2 = tf.keras.layers.Flatten()(vector2)
+
+        x3 = tf.keras.layers.Subtract()([vector1, vector2])
+        x3 = tf.keras.layers.Multiply()([x3, x3])
+
+        x1 = tf.keras.layers.Multiply()([vector1, vector1])
+        x2 = tf.keras.layers.Multiply()([vector2, vector2])
+
+        x4 = tf.keras.layers.Subtract()([x1, x2])
+
+        x5 = tf.keras.layers.Lambda(self.cosine_distance, output_shape=self.cos_dist_output_shape)([x1, x2])
+
+        x = tf.keras.layers.Concatenate(axis=-1)([x5, x4, x3])
+
+        x = tf.keras.layers.Dense(embedding_dim * 2, activation='relu')(x)
+
+        x = tf.keras.layers.Dropout(rate=dropout)(x)
+
+        pred = tf.keras.layers.Dense(1, activation='sigmoid')(x)
 
         self.model = tf.keras.Model(inputs=[input1, input2], outputs=pred)
 
-        metrics = ['accuracy', tf.keras.metrics.Recall(name='recall'), tf.keras.metrics.Precision(name='precission')]
-        self.model.compile(loss='binary_crossentropy',optimizer='adam',metrics=metrics)
+        metrics = ['accuracy', tf.keras.metrics.Recall(name='recall'), tf.keras.metrics.Precision(name='precission'), tf.keras.metrics.TruePositives(name='true_positives'), tf.keras.metrics.FalsePositives(name='false_positives'), tf.keras.metrics.TrueNegatives(name='true_negatives'), tf.keras.metrics.FalseNegatives(name='false_negatives'), tf.keras.metrics.AUC(name='auc')]
+        self.model.compile(loss='binary_crossentropy',optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),metrics=metrics)
         print(self.model.summary())
 
     def fit_model(self, training_data, training_labels, testing_data, testing_labels, num_epochs):
@@ -54,4 +73,14 @@ class BugModel:
     def plot_graphs(self):
         self.plot_graph('accuracy')
         self.plot_graph('loss')
+
+    def cosine_distance(self, vests):
+        x, y = vests
+        x = tf.keras.backend.l2_normalize(x, axis=-1)
+        y = tf.keras.backend.l2_normalize(y, axis=-1)
+        return -tf.keras.backend.mean(x * y, axis=-1, keepdims=True)
+
+    def cos_dist_output_shape(self, shapes):
+        shape1, shape2 = shapes
+        return (shape1[0],1)
     

@@ -15,7 +15,7 @@ class BugModelClient:
     embedding_dim = 50
     training_portion = 0.8
     max_length = 800
-    num_epochs = 3
+    num_epochs = 8
     dropout = 0.1
 
     data_path = 'datasets/training_dataset_pairs.csv'
