@@ -137,6 +137,10 @@ class BugModelClient:
                     top_k_master_labels.append(all_master_labels[pred_index])
                     prediction_summary.append({'case_id': all_labels[pred_index], 'master_id': all_master_labels[pred_index], 'probability': predictions[pred_index]})
             did_predict = master_labels[index] in top_k_master_labels if master_labels[index] != labels[index] else master_labels[index] not in top_k_master_labels
+            print(did_predict)
+            for n, pred_index in enumerate(predictions_top_indices):
+                if all_master_labels[pred_index] == master_labels[index]:
+                    print('Correct target for {} with id {} in position {} with probability of {}'.format(labels[index], all_labels[pred_index], n, predictions[pred_index]))
             all_predictions.append({
                 'case_id': labels[index],
                 'master_id': master_labels[index],
