@@ -117,25 +117,33 @@ class BugModelClient:
         descriptions2 = np.array(text_to_padded(self.clean_descriptions(descriptions2), self.tokenizer, self.max_length))
         return self.bug_model.predict([descriptions1, descriptions2])
 
-    def predict_top_k(self, descriptions, all_descriptions, labels, master_labels, k):
+    def validate_predict_top_k(self, descriptions, labels, master_labels, all_descriptions, all_labels, all_master_labels, k):
         descriptions = np.array(text_to_padded(self.clean_descriptions(descriptions), self.tokenizer, self.max_length))
         all_descriptions = np.array(text_to_padded(self.clean_descriptions(all_descriptions), self.tokenizer, self.max_length))
+        print(labels)
         all_predictions = []
-        for description in descriptions:
+        for index, description in enumerate(descriptions):
+            print(index)
             description_repeated = np.full((len(all_descriptions), self.max_length), description)
             predictions = self.bug_model.predict([description_repeated, all_descriptions])
             predictions = np.array([prediction[0] for prediction in predictions])
             predictions_top_indices = (-predictions).argsort()
             prediction_summary = []
             top_k_master_labels = []
-            for index in predictions_top_indices:
+            for pred_index in predictions_top_indices:
                 if len(top_k_master_labels) >= k:
                     break
-                if master_labels[index] not in top_k_master_labels:
-                    top_k_master_labels.append(master_labels[index])
-                    prediction_summary.append({'case_id': labels[index], 'master_id': master_labels[index], 'probability': predictions[index]})
-            all_predictions.append(prediction_summary)
-        return all_predictions
+                if all_master_labels[pred_index] not in top_k_master_labels:
+                    top_k_master_labels.append(all_master_labels[pred_index])
+                    prediction_summary.append({'case_id': all_labels[pred_index], 'master_id': all_master_labels[pred_index], 'probability': predictions[pred_index]})
+            did_predict = master_labels[index] in top_k_master_labels if master_labels[index] != labels[index] else master_labels[index] not in top_k_master_labels
+            all_predictions.append({
+                'case_id': labels[index],
+                'master_id': master_labels[index],
+                'predictions': prediction_summary,
+                'correct': did_predict
+            })
+        return {'predictions': all_predictions, 'recall': len([prediction for prediction in all_predictions if prediction['correct'] == True]) / len(all_predictions)}
 
 
 

@@ -46,7 +46,7 @@ class BugModel:
         self.model = tf.keras.Model(inputs=[input1, input2], outputs=pred)
 
         metrics = ['accuracy', tf.keras.metrics.Recall(name='recall'), tf.keras.metrics.Precision(name='precission'), tf.keras.metrics.AUC(name='AUC')]
-        self.model.compile(loss='hinge',optimizer=tf.keras.optimizers.Adam(learning_rate=0.0003),metrics=metrics)
+        self.model.compile(loss='binary_crossentropy',optimizer=tf.keras.optimizers.Adam(learning_rate=0.0003),metrics=metrics)
         print(self.model.summary())
 
     def fit_model(self, training_data, training_labels, testing_data, testing_labels, num_epochs):
