@@ -1,11 +1,16 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import numpy as np
+import math
+import IPython.display as display
 
 class BugModel:
 
     model = None
     history = None
     modelPath = 'models/bug_model'
+    learning_rate = 0.00675
+    decay_rate = 0.6
 
     def construct_model(self, vocab_size, embedding_dim, max_length, dropout, embedding_matrix):
 
@@ -46,11 +51,16 @@ class BugModel:
         self.model = tf.keras.Model(inputs=[input1, input2], outputs=pred)
 
         metrics = ['accuracy', tf.keras.metrics.Recall(name='recall'), tf.keras.metrics.Precision(name='precission'), tf.keras.metrics.AUC(name='AUC')]
-        self.model.compile(loss='binary_crossentropy',optimizer=tf.keras.optimizers.Adam(learning_rate=0.0003),metrics=metrics)
+        self.model.compile(loss='binary_crossentropy',optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate),metrics=metrics)
         print(self.model.summary())
 
+    def lr_decay(self, epoch):
+        return self.learning_rate * math.pow(self.decay_rate, epoch)
+
     def fit_model(self, training_data, training_labels, testing_data, testing_labels, num_epochs):
-        self.history = self.model.fit(training_data, training_labels, epochs=num_epochs, validation_data=(testing_data, testing_labels), verbose=2)
+        lr_decay_callback = tf.keras.callbacks.LearningRateScheduler(self.lr_decay, verbose=True)
+        self.plot_learning_rate(self.lr_decay, num_epochs)
+        self.history = self.model.fit(training_data, training_labels, epochs=num_epochs, validation_data=(testing_data, testing_labels), verbose=2, callbacks=[lr_decay_callback])
 
     def predict(self, data):
         return self.model.predict(data)
@@ -65,7 +75,7 @@ class BugModel:
     def plot_graph(self, string):
         plt.plot(self.history.history[string])
         plt.plot(self.history.history['val_'+string])
-        plt.xlabel("Epochs")
+        plt.xlabel('Epochs')
         plt.ylabel(string)
         plt.legend([string, 'val_'+string])
         plt.show()
@@ -76,6 +86,14 @@ class BugModel:
         self.plot_graph('precission')
         self.plot_graph('AUC')
         self.plot_graph('loss')
+
+    def plot_learning_rate(self, lr_func, epochs):
+        xx = np.arange(epochs+1, dtype=np.float)
+        y = [lr_func(x) for x in xx]
+        plt.xlabel('Epochs')
+        plt.ylabel('Learning Rate')
+        plt.plot(xx, y)
+        plt.show()
 
     def cosine_distance(self, vests):
         x, y = vests

@@ -15,8 +15,8 @@ class BugModelClient:
     vocab_size = None
     embedding_dim = 50
     training_portion = 0.8
-    max_length = 800
-    num_epochs = 8
+    max_length = 75
+    num_epochs = 4
     dropout = 0.1
 
     data_path = 'datasets/training_dataset_pairs.csv'
@@ -40,6 +40,7 @@ class BugModelClient:
     def init_data(self, data_count):
         self.data = pd.read_csv(self.data_path, sep=',')
         self.data = self.data[:data_count]
+        print(len(self.data.index))
         self.data['clean_description_1'] = self.clean_descriptions(self.data['description_1'])
         self.data['clean_description_2'] = self.clean_descriptions(self.data['description_2'])
         self.training_size = int(len(self.data.index) * self.training_portion)
@@ -137,7 +138,6 @@ class BugModelClient:
                     top_k_master_labels.append(all_master_labels[pred_index])
                     prediction_summary.append({'case_id': all_labels[pred_index], 'master_id': all_master_labels[pred_index], 'probability': predictions[pred_index]})
             did_predict = master_labels[index] in top_k_master_labels if master_labels[index] != labels[index] else master_labels[index] not in top_k_master_labels
-            print(did_predict)
             for n, pred_index in enumerate(predictions_top_indices):
                 if all_master_labels[pred_index] == master_labels[index]:
                     print('Correct target for {} with id {} in position {} with probability of {}'.format(labels[index], all_labels[pred_index], n, predictions[pred_index]))
