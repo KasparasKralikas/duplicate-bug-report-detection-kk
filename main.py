@@ -2,55 +2,36 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 import pandas as pd
 from text_preprocessor import clean_text, text_to_padded
 import tensorflow as tf
+import tensorflow_hub as hub
 import numpy as np
 import matplotlib.pyplot as plt
 import io
 from bug_model import BugModel
+import tensorflow.keras.layers as layers
+from tensorflow.keras.models import Model
+from tensorflow.keras import backend as K
 
-oov_token = '<OOV>'
-vocab_size = 10000
-embedding_dim = 16
-training_portion = 0.8
-max_length = 800
-num_epochs = 30
+from sklearn.model_selection import train_test_split
 
-data_full = pd.read_csv('datasets/training_dataset.csv', sep=',')
+from bug_model_client import BugModelClient
 
-# smaller dataset for testing
-data_full = data_full[:20000]
+import time
 
-data_full['cleaned_description'] = data_full['description'].apply(lambda x: clean_text(x))
 
-training_size = int(len(data_full.index) * training_portion)
+bug_model_client = BugModelClient()
+bug_model_client.init_data(30000)
+bug_model_client.prepare_embedding()
+bug_model_client.train_model()
+bug_model_client.save_model()
+bug_model_client.plot_graphs()
+bug_model_client.load_model()
 
-training_descriptions = data_full['cleaned_description'][0:training_size]
-training_labels = data_full['is_bug'][0:training_size]
-testing_descriptions = data_full['cleaned_description'][training_size:]
-testing_labels = data_full['is_bug'][training_size:]
+all_bugs = pd.read_csv('datasets/bugs_dataset.csv', sep=',')
 
-tokenizer = Tokenizer(num_words = vocab_size, oov_token=oov_token)
-tokenizer.fit_on_texts(training_descriptions)
-word_index = tokenizer.word_index
+new_bugs = pd.read_csv('datasets/bugs_dataset_testing.csv', sep=',')[:500]
+new_bugs.reset_index(inplace=True)
 
-reverse_word_index = dict([(value, key) for (key, value) in word_index.items()])
-
-def decode_sentence(text):
-    return ' '.join([reverse_word_index.get(i, '?') for i in text])
-
-training_padded = text_to_padded(training_descriptions, tokenizer, max_length)
-testing_padded = text_to_padded(testing_descriptions, tokenizer, max_length)
-
-training_padded = np.array(training_padded)
-training_labels = np.array(training_labels)
-testing_padded = np.array(testing_padded)
-testing_labels = np.array(testing_labels)
-
-bug_model = BugModel()
-
-bug_model.constructModel(vocab_size, embedding_dim, max_length)
-
-bug_model.fit_model(training_padded, training_labels, training_padded, training_labels, num_epochs)
-
-bug_model.plot_graphs()
-
-bug_model.save_model()
+start = time.time()
+bug_model_client.validate_predict_top_k(new_bugs['description'], new_bugs['case_id'], new_bugs['master_id_label'], all_bugs['description'], all_bugs['case_id'], all_bugs['master_id_label'], 20)
+end = time.time()
+print(end - start)
