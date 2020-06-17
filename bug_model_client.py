@@ -15,9 +15,11 @@ class BugModelClient:
     vocab_size = None
     embedding_dim = 50
     training_portion = 0.8
-    max_length = 75
-    num_epochs = 4
-    dropout = 0.1
+    max_length = 100
+    num_epochs = 8
+    dropout = 0.2
+
+    class_weight = {0 : 1 , 1 : 2}
 
     data_path = 'datasets/training_dataset_pairs.csv'
 
@@ -100,7 +102,7 @@ class BugModelClient:
 
     def train_model(self):
         self.bug_model.construct_model(self.vocab_size, self.embedding_dim, self.max_length, self.dropout, self.embedding_matrix)
-        self.bug_model.fit_model([self.X1_train, self.X2_train], self.y_train, [self.X1_test, self.X2_test], self.y_test, self.num_epochs)
+        self.bug_model.fit_model([self.X1_train, self.X2_train], self.y_train, [self.X1_test, self.X2_test], self.y_test, self.num_epochs, self.class_weight)
 
     def plot_graphs(self):
         self.bug_model.plot_graphs()

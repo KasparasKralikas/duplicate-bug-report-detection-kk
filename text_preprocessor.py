@@ -14,7 +14,8 @@ def clean_text(text):
     text = str(text).lower()
     text = ''.join([char for char in text if char not in punctuation])
     tokens = re.split('\W+', text)
-    text = [wnl.lemmatize(word) for word in tokens if word not in stopwords]
+    #text = [wnl.lemmatize(word) for word in tokens if word not in stopwords]
+    text = [word for word in tokens if word not in stopwords]
     return ' '.join(text)
 
 def text_to_padded(text, tokenizer, max_length):

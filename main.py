@@ -28,7 +28,7 @@ bug_model_client.load_model()
 
 all_bugs = pd.read_csv('datasets/bugs_dataset.csv', sep=',')
 
-new_bugs = pd.read_csv('datasets/bugs_dataset_testing.csv', sep=',')[201:400]
+new_bugs = pd.read_csv('datasets/bugs_dataset_testing.csv', sep=',')[:500]
 new_bugs.reset_index(inplace=True)
 
 start = time.time()

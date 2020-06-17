@@ -9,8 +9,9 @@ class BugModel:
     model = None
     history = None
     modelPath = 'models/bug_model'
-    learning_rate = 0.00675
-    decay_rate = 0.6
+    learning_rate = 0.0008
+    steady_epochs = 3
+    decay_rate = 0.75
 
     def construct_model(self, vocab_size, embedding_dim, max_length, dropout, embedding_matrix):
 
@@ -46,6 +47,10 @@ class BugModel:
 
         x = tf.keras.layers.Dropout(rate=dropout)(x)
 
+        #x = tf.keras.layers.Dense(embedding_dim * 2, activation='relu')(x)
+
+        #x = tf.keras.layers.Dropout(rate=dropout)(x)
+
         pred = tf.keras.layers.Dense(1, activation='sigmoid')(x)
 
         self.model = tf.keras.Model(inputs=[input1, input2], outputs=pred)
@@ -54,13 +59,19 @@ class BugModel:
         self.model.compile(loss='binary_crossentropy',optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate),metrics=metrics)
         print(self.model.summary())
 
-    def lr_decay(self, epoch):
-        return self.learning_rate * math.pow(self.decay_rate, epoch)
+    #def lr_decay(self, epoch):
+    #    return self.learning_rate * math.pow(self.decay_rate, epoch)
 
-    def fit_model(self, training_data, training_labels, testing_data, testing_labels, num_epochs):
+    def lr_decay(self, epoch):
+        if epoch < self.steady_epochs:
+            return self.learning_rate
+        else:
+            return self.learning_rate * tf.math.exp(self.decay_rate * (self.steady_epochs - epoch))
+
+    def fit_model(self, training_data, training_labels, testing_data, testing_labels, num_epochs, class_weight):
         lr_decay_callback = tf.keras.callbacks.LearningRateScheduler(self.lr_decay, verbose=True)
         self.plot_learning_rate(self.lr_decay, num_epochs)
-        self.history = self.model.fit(training_data, training_labels, epochs=num_epochs, validation_data=(testing_data, testing_labels), verbose=2, callbacks=[lr_decay_callback])
+        self.history = self.model.fit(training_data, training_labels, epochs=num_epochs, validation_data=(testing_data, testing_labels), verbose=2, class_weight=class_weight, callbacks=[lr_decay_callback])
 
     def predict(self, data):
         return self.model.predict(data)
